@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>얼굴 탐지 및 피부톤 추출</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #skinToneContainer {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        #skinToneContainer div {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>카메라로 사진 찍기</h2>
+    
+    <!-- 웹캠 화면과 촬영 버튼 -->
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="snap">사진 찍기</button>
+
+    <!-- 촬영된 사진과 얼굴 추출 결과를 보여주는 캔버스와 div -->
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    <h3>얼굴 크롭 결과:</h3>
+    <img id="croppedFace" alt="얼굴 크롭 결과" style="border: 1px solid #000; width: 200px; height: auto;">
+    <h3>피부톤 색상:</h3>
+    <div id="skinToneContainer"></div> <!-- 여러 색상을 위한 컨테이너 -->
+    <h3>퍼스널 컬러:</h3>
+    <div id="toneResult" style="font-weight: bold;"></div> <!-- 웜톤/쿨톤 결과를 위한 div -->
+    <h3>처리 시간:</h3>
+    <div id="processTime" style="font-weight: bold;"></div>
+
+    <!-- Form을 통해 사진 데이터를 서버로 전송 -->
+    <form id="uploadForm" action="{{ url_for('upload') }}" method="post">
+        <input type="hidden" name="image" id="imageData">
+        <button type="submit">사진 업로드</button>
+    </form>
+
+    <script>
+        // 웹캠 설정
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => video.srcObject = stream)
+            .catch(error => console.error("카메라 접근 실패:", error));
+
+        // 사진 촬영
+        const canvas = document.getElementById('canvas');
+        const snap = document.getElementById('snap');
+        const imageData = document.getElementById('imageData');
+        snap.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/png'); // 캔버스 데이터를 base64로 변환
+            imageData.value = dataURL; // 변환된 데이터를 hidden input에 저장
+            alert("사진이 촬영되었습니다. 업로드 버튼을 눌러주세요.");
+        });
+
+        // Form 제출 처리 및 결과 표시
+        const form = document.getElementById('uploadForm');
+        form.addEventListener('submit', event => {
+            event.preventDefault();  // 페이지 리로드 방지
+
+            fetch("{{ url_for('upload') }}", {
+                method: "POST",
+                body: new FormData(form)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    // 얼굴 크롭 이미지를 표시
+                    document.getElementById('croppedFace').src = "data:image/jpeg;base64," + data.face_image;
+
+                    // 피부톤 색상을 표시
+                    const skinToneContainer = document.getElementById('skinToneContainer');
+                    skinToneContainer.innerHTML = ""; // 이전 내용을 초기화
+                    const color = data.skin_tone;
+                    const [r, g, b] = color;
+                    const colorDiv = document.createElement('div');
+                    colorDiv.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    skinToneContainer.appendChild(colorDiv);
+
+                    // 퍼스널 컬러 결과 표시
+                    const toneResult = document.getElementById('toneResult');
+                    toneResult.innerText = `${data.tone}`; // 웜톤/쿨톤 결과
+
+                    // 처리 시간 표시
+                    const processTime = document.getElementById('processTime');
+                    processTime.innerText = `${data.elapsed_time}초`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
