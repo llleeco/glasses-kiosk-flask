@@ -5,9 +5,10 @@ import base64
 from PIL import Image
 import io
 import time
-from personal_color_analysis import personal_color
+#from personal_color_analysis import personal_color
 from vector.chroma import search_chroma, get_suggested_glasses, filter_glasses_by_mapping, \
-    vector_search_in_chroma, eyewear_collection, add_glasses_to_chroma
+    vector_search_in_chroma, eyewear_collection, add_glasses_to_chroma, search_glasses_by_combined_mapping, \
+    search_glasses_with_equal_weights
 import pandas as pd
 app = Flask(__name__)
 
@@ -60,10 +61,11 @@ def search_item():
     # skin_tone = request.args.get('skin_tone')
     user_face_shape = '둥근형'
     user_skin_tone = '웜톤'
-    suggested_glasses = get_suggested_glasses(user_face_shape, user_skin_tone)
-    filtered_glasses = filter_glasses_by_mapping(suggested_glasses, eyewear_collection)
-    final_recommendations = vector_search_in_chroma(filtered_glasses, eyewear_collection)
-    # results = search_chroma(query)
+    # suggested_glasses = get_suggested_glasses(user_face_shape, user_skin_tone)
+    # filtered_glasses = filter_glasses_by_mapping(suggested_glasses, eyewear_collection)
+    # final_recommendations = vector_search_in_chroma(filtered_glasses, eyewear_collection)
+    # # results = search_chroma(query)
+    final_recommendations = search_glasses_with_equal_weights(user_face_shape, user_skin_tone, eyewear_collection)
     return jsonify(final_recommendations)
 
 if __name__ == '__main__':
