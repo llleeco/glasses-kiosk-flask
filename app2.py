@@ -1,25 +1,34 @@
 from flask import Flask, request, render_template, jsonify
 import cv2
 import numpy as np
-import base64
 from PIL import Image
 import io
-import time
-#from personal_color_analysis import personal_color
-from vector.chroma import search_chroma, get_suggested_glasses, filter_glasses_by_mapping, \
-    vector_search_in_chroma, eyewear_collection, add_glasses_to_chroma, search_glasses_by_combined_mapping, \
-    search_glasses_with_equal_weights
+import dlib
+from personal_color_analysis import personal_color
 import pandas as pd
+from face_shape_classify.align_face import align_face
+from face_shape_classify.classify_face_shape import classify_face_shape
+from face_shape_classify.preprocess_image import preprocess_image
+from sentence_transformers import SentenceTransformer
+from vector.milvus import (
+    insert_data_to_milvus,
+    query_milvus, extract_query
+)
+
 app = Flask(__name__)
 
-#웹 페이지 렌더링
+face_detector = dlib.get_frontal_face_detector()
+landmark_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# 사진 업로드 및 얼굴 탐지 및 피부톤 추출
+# 사진 업로드 및 얼굴 탐지 및 피부톤 추출, 얼굴형 분석, 추천 안경모델 검색
 @app.route('/upload', methods=['POST'])
 def upload():
+    insert_data_to_milvus()
     files = request.files.getlist('image')
     if files:
         file = files[0]
@@ -37,36 +46,60 @@ def upload():
         # skin_tone을 int32에서 기본 int로 변환
         skin_tone = [int(c) for c in skin_tone]  # numpy int32 -> int 변환
         
+        # 이미지 전처리
+        img = preprocess_image(image_data)
+
+        # 얼굴 감지
+        faces = face_detector(img)
+        if len(faces) == 0:
+            return jsonify({"error": "No face detected"}), 400
+
+        # 얼굴형 분류
+        face_shapes = []
+        for face in faces:
+            landmarks = landmark_predictor(img, face)
+            face_shape = classify_face_shape(landmarks)
+            app.logger.info(f"Face shape detected: {face_shape}")
+
+            if face_shape == "Unknown":
+                 app.logger.info("Face shape is unknown, aligning face...")
+                 aligned_img = align_face(img, face)
+                 if aligned_img is not None:
+                # 재정렬된 얼굴로 다시 분류 시도
+                     landmarks = landmark_predictor(aligned_img, face)
+                     face_shape = classify_face_shape(landmarks)
+                     app.logger.info(f"Face shape after alignment: {face_shape}")
+                 else:
+                     app.logger.error("Face alignment failed")
+            face_shapes.append(face_shape)
+
+        # 결과 반환
+        if face_shapes and "Unknown" not in face_shapes:
+            print(face_shapes)
+        else:
+            return jsonify({"face_shape": "Unknown"}), 400
+
+        face_shape = face_shapes[0]
+        print("Face_shpae 첫번째 요소",face_shape)
+        skin_tone2 = tone
+        print("skin_tone=====",skin_tone2)
+
+        extracted_query = extract_query(face_shape, skin_tone2)
+        print(extracted_query)
+        query_vector = model.encode([extracted_query])[0]
+        # Milvus에서 검색
+        results = query_milvus(query_vector)
+        results = sorted(results, key=lambda result: result.distance)
+
+        # 결과 반환      
         return jsonify({
             "tone": tone,
-            "skin_tone": skin_tone
+            "face_shape": face_shape,
+            "glasses_id": [result.id for result in results]
         })
     else:
         return jsonify({"error": "No image uploaded"}), 400
 
-
-@app.route('/add_glasses', methods=['POST'])
-def add_glasses():
-    # 액셀 파일 경로로부터 데이터를 읽기
-    excel_file_path = '안경.xlsx'
-    df = pd.read_excel(excel_file_path)
-
-    # Chroma 컬렉션에 안경 데이터 추가
-    add_glasses_to_chroma(df, eyewear_collection)
-
-    return jsonify({"message": "Glasses added successfully!"})
-@app.route('/search', methods=['GET'])
-def search_item():
-    # face_shape = request.args.get('face_shape')
-    # skin_tone = request.args.get('skin_tone')
-    user_face_shape = '둥근형'
-    user_skin_tone = '웜톤'
-    # suggested_glasses = get_suggested_glasses(user_face_shape, user_skin_tone)
-    # filtered_glasses = filter_glasses_by_mapping(suggested_glasses, eyewear_collection)
-    # final_recommendations = vector_search_in_chroma(filtered_glasses, eyewear_collection)
-    # # results = search_chroma(query)
-    final_recommendations = search_glasses_with_equal_weights(user_face_shape, user_skin_tone, eyewear_collection)
-    return jsonify(final_recommendations)
 
 if __name__ == '__main__':
     app.run(debug=True)

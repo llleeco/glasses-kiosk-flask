@@ -1,0 +1,36 @@
+ [
+    {"face_shape": "둥근형", "skin_tone": "봄웜톤", "recommended_colors": ["gold", "brown", "rosegold"], "recommended_shapes": ["square", "poly"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "둥근형", "skin_tone": "여름쿨톤", "recommended_colors": ["silver", "purple", "navy"], "recommended_shapes": ["square", "frameless"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "둥근형", "skin_tone": "가을웜톤", "recommended_colors": ["brown", "yellow", "gold"], "recommended_shapes": ["square", "boeing"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "둥근형", "skin_tone": "겨울쿨톤", "recommended_colors": ["black", "silver", "navy"], "recommended_shapes": ["square", "poly"], "recommended_materials": ["titan", "metal"]},
+    
+    
+    {"face_shape": "각진형", "skin_tone": "봄웜톤", "recommended_colors": ["gold", "yellow", "brown"], "recommended_shapes": ["round", "orval"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "각진형", "skin_tone": "여름쿨톤", "recommended_colors": ["silver", "purple", "transperant"], "recommended_shapes": ["round", "frameless"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "각진형", "skin_tone": "가을웜톤", "recommended_colors": ["brown", "rosgold", "gold"], "recommended_shapes": ["round", "cats"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "각진형", "skin_tone": "겨울쿨톤", "recommended_colors": ["black", "navy", "silver"], "recommended_shapes": ["round", "boeing"], "recommended_materials": ["titan", "metal"]},
+    
+    
+    {"face_shape": "타원형", "skin_tone": "봄웜톤", "recommended_colors": ["yellow", "rosgold", "gold"], "recommended_shapes": ["cats", "boeing"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "타원형", "skin_tone": "여름쿨톤", "recommended_colors": ["silver", "purple", "transperant"], "recommended_shapes": ["round", "orval"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "타원형", "skin_tone": "가을웜톤", "recommended_colors": ["brown", "gold", "yellow"], "recommended_shapes": ["cats", "frameless"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "타원형", "skin_tone": "겨울쿨톤", "recommended_colors": ["black", "silver", "navy"], "recommended_shapes": ["orval", "round"], "recommended_materials": ["titan", "metal"]},
+    
+    
+    {"face_shape": "하트형", "skin_tone": "봄웜톤", "recommended_colors": ["rosegold", "brown", "yellow"], "recommended_shapes": ["cats", "poly"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "하트형", "skin_tone": "여름쿨톤", "recommended_colors": ["transperant", "purple", "silver"], "recommended_shapes": ["frameless", "round"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "하트형", "skin_tone": "가을웜톤", "recommended_colors": ["gold", "brown", "rosgold"], "recommended_shapes": ["boeing", "orval"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "하트형", "skin_tone": "겨울쿨톤", "recommended_colors": ["black", "navy", "silver"], "recommended_shapes": ["cats", "frameless"], "recommended_materials": ["titan", "metal"]},
+    
+    
+    {"face_shape": "긴형", "skin_tone": "봄웜톤", "recommended_colors": ["gold", "yellow", "brown"], "recommended_shapes": ["cats", "round"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "긴형", "skin_tone": "여름쿨톤", "recommended_colors": ["purple", "silver", "transperant"], "recommended_shapes": ["frameless", "boeing"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "긴형", "skin_tone": "가을웜톤", "recommended_colors": ["brown", "rosegold", "gold"], "recommended_shapes": ["cats", "orval"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "긴형", "skin_tone": "겨울쿨톤", "recommended_colors": ["navy", "black", "silver"], "recommended_shapes": ["round", "frameless"], "recommended_materials": ["titan", "metal"]},
+    
+    
+    {"face_shape": "다이아형", "skin_tone": "봄웜톤", "recommended_colors": ["yellow", "gold", "rosegold"], "recommended_shapes": ["cats", "boeing"], "recommended_materials": ["plastic", "metal"]},
+    {"face_shape": "다이아형", "skin_tone": "여름쿨톤", "recommended_colors": ["silver", "transperant", "purple"], "recommended_shapes": ["round", "frameless"], "recommended_materials": ["titan", "metal"]},
+    {"face_shape": "다이아형", "skin_tone": "가을웜톤", "recommended_colors": ["brown", "gold", "rosegold"], "recommended_shapes": ["boeing", "orval"], "recommended_materials": ["metal", "plastic"]},
+    {"face_shape": "다이아형", "skin_tone": "겨울쿨톤", "recommended_colors": ["black", "navy", "silver"], "recommended_shapes": ["frameless", "poly"], "recommended_materials": ["titan", "metal"]}
+]
