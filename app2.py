@@ -30,7 +30,7 @@ def index():
 # 사진 업로드 및 얼굴 탐지 및 피부톤 추출, 얼굴형 분석, 추천 안경모델 검색
 @app.route('/upload', methods=['POST'])
 def upload():
-    insert_data_to_milvus()
+    # insert_data_to_milvus()
     files = request.files.getlist('image')
     if files:
         file = files[0]
@@ -107,16 +107,29 @@ def upload():
 @app.route("/feedback", methods=["POST"])
 def feedback():
     insert_data_to_milvus()
-    query = request.args.get("query")
-    query_vector = np.array(session.get('query_vector')) 
-    results = session.get('results')
-    print(query_vector)
-    print(results)
-    results_ = search_glasses_with_feedback(query_vector, results, query, "glasses_collection")
+    data = request.json  # JSON 데이터를 가져옴
+    query = data.get("feedback")
+    face_shape = data.get("face_shape")
+    skin_tone2 = data.get("personal_color")
+    # query = request.args.get("feedback")
+    # face_shape = request.args.get("face_shape")
+    # skin_tone2 = request.args.get("personal_color")
+    print("###feedback",query)
+    print("#####face_shape",face_shape, skin_tone2)
+    extracted_query = extract_query(face_shape, skin_tone2)
+    query_vector = model.encode([extracted_query])[0]
+    # Milvus에서 검색
+    results = query_milvus(query_vector)
+    results = sorted(results, key=lambda result: result.distance)
 
-    return jsonify([
-        result.id for result in results_
-    ])
+    results_ = search_glasses_with_feedback(query_vector, [result.text for result in results], query, "glasses_collection")
+
+    # return jsonify([
+    #     result.id for result in results_
+    # ])
+    return jsonify({
+    "glasses_id": [result.id for result in results_]
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

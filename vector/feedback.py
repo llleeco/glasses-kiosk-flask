@@ -1,8 +1,10 @@
 import openai
 from pymilvus import Collection
 import os
+from vector.milvus import insert_data_to_milvus
 openai.api_key= os.environ.get('OPENAI_API_KEY')
 def search_glasses_with_feedback(initial_vector, initial_recommendations, query, collection_name):
+#   insert_data_to_milvus()
     """
     사용자의 피드백을 기반으로 Milvus에서 검색을 수행하는 함수.
 
@@ -13,6 +15,8 @@ def search_glasses_with_feedback(initial_vector, initial_recommendations, query,
     Returns:
         list: 검색 결과 리스트 (ID, 브랜드, 가격, 무게, 재질 포함).
     """
+
+    print("################feedbackquery", query)
     # OpenAI 모델을 사용하여 Milvus 쿼리 생성
     print("#############", initial_recommendations)
     llm_response = openai.chat.completions.create(
@@ -49,6 +53,7 @@ def search_glasses_with_feedback(initial_vector, initial_recommendations, query,
     # Milvus 컬렉션 연결
     collection = Collection(collection_name)
     collection.load()
+    print(f"컬렉션 '{collection_name}'에는 {collection.num_entities}개의 엔티티가 있습니다.")
     # Milvus에서 검색 실행
     results = collection.search(
         data=[initial_vector],
