@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, session
 import cv2
 import numpy as np
 from PIL import Image
@@ -6,13 +6,15 @@ import io
 import dlib
 from personal_color_analysis import personal_color
 import pandas as pd
+import os
 from face_shape_classify.align_face import align_face
 from face_shape_classify.classify_face_shape import classify_face_shape
 from face_shape_classify.preprocess_image import preprocess_image
 from sentence_transformers import SentenceTransformer
+from vector.feedback import search_glasses_with_feedback
 from vector.milvus import (
     insert_data_to_milvus,
-    query_milvus, extract_query
+    query_milvus, extract_query,
 )
 
 app = Flask(__name__)
@@ -20,10 +22,10 @@ app = Flask(__name__)
 face_detector = dlib.get_frontal_face_detector()
 landmark_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-
-@app.route('/')
+app.secret_key = os.environ.get('SECRET_KEY')
 def index():
     return render_template('index.html')
+
 
 # 사진 업로드 및 얼굴 탐지 및 피부톤 추출, 얼굴형 분석, 추천 안경모델 검색
 @app.route('/upload', methods=['POST'])
@@ -87,10 +89,12 @@ def upload():
         extracted_query = extract_query(face_shape, skin_tone2)
         print(extracted_query)
         query_vector = model.encode([extracted_query])[0]
+        session['query_vector'] = query_vector.tolist() 
         # Milvus에서 검색
         results = query_milvus(query_vector)
         results = sorted(results, key=lambda result: result.distance)
-
+        
+        session['results'] =  [result.text for result in results]
         # 결과 반환      
         return jsonify({
             "tone": tone,
@@ -100,9 +104,21 @@ def upload():
     else:
         return jsonify({"error": "No image uploaded"}), 400
 
+@app.route("/feedback", methods=["POST"])
+def feedback():
+    insert_data_to_milvus()
+    query = request.args.get("query")
+    query_vector = np.array(session.get('query_vector')) 
+    results = session.get('results')
+    print(query_vector)
+    print(results)
+    results_ = search_glasses_with_feedback(query_vector, results, query, "glasses_collection")
+
+    return jsonify([
+        result.id for result in results_
+    ])
 
 if __name__ == '__main__':
     app.run(debug=True)
 
-if __name__ == "__main__":
-    app.run('0.0.0.0',debug=True)
+

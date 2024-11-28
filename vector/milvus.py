@@ -16,7 +16,17 @@ def init_milvus():
     """Milvus 컬렉션 초기화"""
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True),
-        FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384),  # Sentence-BERT 임베딩 크기
+        FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384),
+        FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2000),
+        FieldSchema(name="brand", dtype=DataType.VARCHAR, max_length=255),
+        FieldSchema(name="color", dtype=DataType.VARCHAR, max_length=255),
+        FieldSchema(name="shape", dtype=DataType.VARCHAR, max_length=255),
+        FieldSchema(name="width", dtype=DataType.DOUBLE),
+        FieldSchema(name="length", dtype=DataType.DOUBLE),
+        FieldSchema(name="weight", dtype=DataType.DOUBLE),
+        FieldSchema(name="material", dtype=DataType.VARCHAR, max_length=255),
+        FieldSchema(name="price", dtype=DataType.INT64),
+        # Sentence-BERT 임베딩 크기
     ]
 
     if utility.has_collection(COLLECTION_NAME):
@@ -33,21 +43,20 @@ def insert_data_to_milvus(data_path="안경.xlsx"):
 
     # 각 데이터의 특징을 결합하여 임베딩 생성
     descriptions = df.apply(
-        lambda row: f"Model: {row['model']}, Color: {row['color']}, Shape: {row['shape']}, Material: {row['material']}, Price: {row['price']}",
+        lambda row: f"Color: {row['color']}, Shape: {row['shape']}, Material: {row['material']}, Price: {row['price']}, Brand: {row['brand']}, Width: {row['width']}, Length: {row['length']}, Weight:{row['weight']}",
         axis=1
     )
     vectors = model.encode(descriptions.tolist())
-
     # Milvus에 삽입
     collection = init_milvus()
-    collection.insert([df['id'].tolist(), vectors])
+    collection.insert([df['id'].tolist(), vectors,descriptions.tolist(), df['brand'].tolist(),df['color'].tolist(),df['shape'].tolist(),df['width'].tolist(),df['length'].tolist(),df['weight'].tolist(),df['material'].tolist(),df['price'].tolist()])
     collection.create_index(field_name="vector", index_params={"metric_type": "L2", "index_type": "IVF_FLAT", "params": {"nlist": 128}})
     collection.load()
 
 
 # Sentence-BERT 모델 로드
 
-def query_milvus(query_vector, top_k=5):
+def query_milvus(query_vector, top_k=1):
     """Milvus에서 벡터 유사도 검색"""
     collection = Collection(COLLECTION_NAME)
     collection.load()
@@ -58,30 +67,10 @@ def query_milvus(query_vector, top_k=5):
         anns_field="vector",
         param={"metric_type": "L2", "params": {"nprobe": 16}},
         limit=top_k,
-        output_fields=["id"]
+        output_fields=["id", "text", "color", "price", "width", "length", "weight", "material", "brand"]
     )
 
     return results[0]
-
-# LLM으로 사용자 요청 처리
-#openai.api_key = ""
-    # llm_response = openai.chat.completions.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #         {"role": "system",
-    #          "content": (
-    #              "You are an assistant that reformulates user queries about glasses into concise, clear text "
-    #              "that includes essential details for database search. "
-    #              "Base your response on database fields: 'color', 'shape', 'material', 'price', and 'weight'. "
-    #              "Your task is to generate a single sentence that can describe a search query precisely."
-    #              "Here is a mapping table and available options for recommendations: "
-    #              f"{mapping_data}. Use this data to generate a single sentence. "
-    #          )},
-    #         {"role": "user",
-    #          "content": f"Based on this query: '{user_query}', provide a refined search description."}
-    #     ]
-    # )
-    # extracted_query = llm_response.choices[0].message.content
 
 mapping_table = [
 {'face_shape': '둥근형', 'skin_tone': '봄웜톤', 'recommended_colors': ['gold', 'brown', 'rosgold'], 'recommended_shapes': ['square', 'poly'], 'recommended_materials': ['metal', 'plastic']},
