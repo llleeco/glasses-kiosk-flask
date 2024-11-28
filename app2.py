@@ -30,7 +30,7 @@ def index():
 # 사진 업로드 및 얼굴 탐지 및 피부톤 추출, 얼굴형 분석, 추천 안경모델 검색
 @app.route('/upload', methods=['POST'])
 def upload():
-    # insert_data_to_milvus()
+    insert_data_to_milvus()
     files = request.files.getlist('image')
     if files:
         file = files[0]
@@ -106,7 +106,7 @@ def upload():
 
 @app.route("/feedback", methods=["POST"])
 def feedback():
-    insert_data_to_milvus()
+  
     data = request.json  # JSON 데이터를 가져옴
     query = data.get("feedback")
     face_shape = data.get("face_shape")

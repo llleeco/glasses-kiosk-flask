@@ -1,10 +1,9 @@
 import openai
 from pymilvus import Collection
 import os
-from vector.milvus import insert_data_to_milvus
 openai.api_key= os.environ.get('OPENAI_API_KEY')
 def search_glasses_with_feedback(initial_vector, initial_recommendations, query, collection_name):
-#   insert_data_to_milvus()
+
     """
     사용자의 피드백을 기반으로 Milvus에서 검색을 수행하는 함수.
 
@@ -50,6 +49,7 @@ def search_glasses_with_feedback(initial_vector, initial_recommendations, query,
     # OpenAI로부터 Milvus 쿼리 표현식 받기
     milvus_expr = llm_response.choices[0].message.content.strip()
     print(milvus_expr)
+    
     # Milvus 컬렉션 연결
     collection = Collection(collection_name)
     collection.load()
