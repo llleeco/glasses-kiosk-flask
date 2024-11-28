@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify, session
+from flask import Flask, request, render_template, jsonify
 import cv2
 import numpy as np
 from PIL import Image
@@ -22,10 +22,9 @@ app = Flask(__name__)
 face_detector = dlib.get_frontal_face_detector()
 landmark_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-app.secret_key = os.environ.get('SECRET_KEY')
+
 def index():
     return render_template('index.html')
-
 
 # 사진 업로드 및 얼굴 탐지 및 피부톤 추출, 얼굴형 분석, 추천 안경모델 검색
 @app.route('/upload', methods=['POST'])
@@ -89,12 +88,13 @@ def upload():
         extracted_query = extract_query(face_shape, skin_tone2)
         print(extracted_query)
         query_vector = model.encode([extracted_query])[0]
-        session['query_vector'] = query_vector.tolist() 
+    
         # Milvus에서 검색
         results = query_milvus(query_vector)
         results = sorted(results, key=lambda result: result.distance)
         
-        session['results'] =  [result.text for result in results]
+        face_shape+="형"
+        print(face_shape)
         # 결과 반환      
         return jsonify({
             "tone": tone,
